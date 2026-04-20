@@ -1,13 +1,15 @@
 import json
-from xml.sax.handler import property_dom_node
 
-path = []
+
 def trace(data, src,dst):
     if src==dst:
-        return
-    trace(data,src,data[dst])
-    path.append(data[dst])
-    return path
+        return [[src]]
+    paths=[]
+    for p in data[dst]:
+        subpaths=trace(data, src, p)
+        for path in subpaths:
+            paths.append(path+[dst])
+    return paths
 
 def dijkstra(graph, source, destination=None):
     unvisited_nodes = []
@@ -36,18 +38,16 @@ def dijkstra(graph, source, destination=None):
 
         if wn == destination:
             print('Destination reached, terminating')
-            #path = trace(pbn, source, destination)
-            #path.append(destination)
-            return costs,pbn
+            path = trace(pbn, source, destination)
+            return costs,pbn, path
 
         for k,v in graph[wn].items():
             if k in unvisited_nodes:
-                if costs[wn]+v <= costs[k]:
+                if costs[wn]+v < costs[k]:
                     costs[k] = costs[wn]+v
-                    if pbn[k]:
-                        pbn[k].append(wn)
-                    else:
-                        pbn[k]=[wn]
+                    pbn[k]=[wn]
+                elif costs[wn]+v == costs[k]:
+                    pbn[k].append(wn)
         unvisited_nodes.remove(wn)
 
     return costs, pbn
@@ -56,4 +56,4 @@ def dijkstra(graph, source, destination=None):
 with open("graph.json", 'r') as graph_file:
     graph = json.load(graph_file)
 
-print(dijkstra(graph, "R1","R4"))
+print(dijkstra(graph, "R1","R8"))
